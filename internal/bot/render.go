@@ -163,22 +163,6 @@ func formatDisplayDate(dateStr string) string {
 	return d.Format("02.01.2006")
 }
 
-// --- slanje/editovanje poruka ---
-
-// withKeyboard garantuje da InlineKeyboardMarkup ima ne-nil InlineKeyboard
-// polje.
-//
-// tgbotapi.InlineKeyboardMarkup{InlineKeyboard [][]InlineKeyboardButton}
-// nema `omitempty` tag na tom polju, a Go-ova nula-vrednost textView{} (npr.
-// kad kreiramo textView bez eksplicitnog keyboard polja, za obične
-// tekstualne promptove ili poruke o grešci) ima InlineKeyboard == nil. Go-ov
-// encoding/json marshaluje nil slice kao "null", ne kao "[]". Telegram API
-// je strog po tom pitanju: očekuje niz (makar prazan) za "inline_keyboard"
-// i odbija ceo zahtev greškom "field \"inline_keyboard\" must be of type
-// Array" ako dobije null - i to tiho, kao grešku u logu, bez ikakve promene
-// na strani korisnika (poruka jednostavno ostane neizmenjena). Zato ovo
-// normalizujemo na jednom mestu, umesto da se oslanjamo da svaki pozivalac
-// eksplicitno postavi bar prazan slice.
 func withKeyboard(kb tgbotapi.InlineKeyboardMarkup) tgbotapi.InlineKeyboardMarkup {
 	if kb.InlineKeyboard == nil {
 		kb.InlineKeyboard = [][]tgbotapi.InlineKeyboardButton{}
@@ -186,12 +170,16 @@ func withKeyboard(kb tgbotapi.InlineKeyboardMarkup) tgbotapi.InlineKeyboardMarku
 	return kb
 }
 
-func (b *Bot) sendText(chatID int64, v textView) {
+// getting id of the message to edit it later, instead of sending a new message (which would be confusing for the user) - see finishAddFolder/finishAddBox/finishAddEntry in text_input.go
+func (b *Bot) sendText(chatID int64, v textView) int {
 	msg := tgbotapi.NewMessage(chatID, v.text)
 	msg.ReplyMarkup = withKeyboard(v.keyboard)
-	if _, err := b.api.Send(msg); err != nil {
+	sent, err := b.api.Send(msg)
+	if err != nil {
 		log.Printf("greška pri slanju poruke (chat_id=%d): %v", chatID, err)
+		return 0
 	}
+	return sent.MessageID
 }
 
 func (b *Bot) editText(chatID int64, messageID int, v textView) {
@@ -213,14 +201,17 @@ func (b *Bot) answerCallback(id, text string) {
 	}
 }
 
-func (b *Bot) renderText(cb *tgbotapi.CallbackQuery, v textView) {
+// renderText vraća ID poruke koja je posle poziva zaista prikazana - isti
+// cb.Message.MessageID ako je editovano na mestu, ili ID nove poruke ako je
+// stara (sa slikom) morala da se obriše i pošalje nova tekstualna.
+func (b *Bot) renderText(cb *tgbotapi.CallbackQuery, v textView) int {
 	chatID := cb.Message.Chat.ID
 	if len(cb.Message.Photo) == 0 {
 		b.editText(chatID, cb.Message.MessageID, v)
-		return
+		return cb.Message.MessageID
 	}
 	b.deleteMessage(chatID, cb.Message.MessageID)
-	b.sendText(chatID, v)
+	return b.sendText(chatID, v)
 }
 
 // deleting the previous message and sending a new one is the only way to change a photo message into a text message, because Telegram does not allow editing a photo message into a text message.

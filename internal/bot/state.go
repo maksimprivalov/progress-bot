@@ -22,6 +22,9 @@ type pendingAction struct {
 	parentID *int64
 	boxType  storage.BoxType
 	boxID    int64
+
+	// bot question id; when bot is waiting for user input, it sends a question to the user and stores the message ID of that question. When the user responds, the bot can edit that specific message instead of sending a new one, keeping the chat clean and organized.
+	promptMessageID int
 }
 
 type conversationState struct {

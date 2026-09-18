@@ -1,0 +1,8 @@
+/progress-bot
+/progress-bot.exe
+*.db
+
+.env
+.env.local
+
+.claude/

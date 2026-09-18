@@ -102,6 +102,34 @@ func measureKeyboard(box storage.Item) tgbotapi.InlineKeyboardMarkup {
 	)
 }
 
+func measureSummaryKeyboard(box storage.Item, hasEntries bool) tgbotapi.InlineKeyboardMarkup {
+	var rows [][]tgbotapi.InlineKeyboardButton
+	if hasEntries {
+		rows = append(rows, tgbotapi.NewInlineKeyboardRow(
+			tgbotapi.NewInlineKeyboardButtonData("📊 Prikaži grafikon", fmt.Sprintf("show_chart:%d", box.ID)),
+		))
+	}
+	rows = append(rows,
+		tgbotapi.NewInlineKeyboardRow(tgbotapi.NewInlineKeyboardButtonData("➕ Unesi vrednost", fmt.Sprintf("add_entry:%d", box.ID))),
+		tgbotapi.NewInlineKeyboardRow(
+			tgbotapi.NewInlineKeyboardButtonData("🗑 Obriši box", fmt.Sprintf("delete_confirm:%d", box.ID)),
+			tgbotapi.NewInlineKeyboardButtonData("⬅️ Nazad", "back:"+encodeParent(box.ParentID)),
+		),
+	)
+	return tgbotapi.NewInlineKeyboardMarkup(rows...)
+}
+
+func buildMeasureSummaryView(box storage.Item, entries []storage.Entry) textView {
+	text := "📊 " + box.Name
+	if len(entries) == 0 {
+		text += "\n\nNema još nijednog zapisa."
+	} else {
+		last := entries[len(entries)-1]
+		text += fmt.Sprintf("\n\nPoslednji unos: %.1f (%s)\nBroj zapisa: %d", *last.Value, formatDisplayDate(last.EntryDate), len(entries))
+	}
+	return textView{text: text, keyboard: measureSummaryKeyboard(box, len(entries) > 0)}
+}
+
 func checkKeyboard(box storage.Item) tgbotapi.InlineKeyboardMarkup {
 	return tgbotapi.NewInlineKeyboardMarkup(
 		tgbotapi.NewInlineKeyboardRow(tgbotapi.NewInlineKeyboardButtonData("✅ Označi odrađeno danas", fmt.Sprintf("add_entry:%d", box.ID))),

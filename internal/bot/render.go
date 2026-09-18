@@ -17,9 +17,9 @@ type textView struct {
 }
 
 func buildRootView(items []storage.Item) textView {
-	text := "📋 Glavni meni"
+	text := "📋 Main menu"
 	if len(items) == 0 {
-		text += "\n\nPrazno je. Dodaj svoj prvi folder ili box."
+		text += "\n\nIt's empty. Add your first folder or box."
 	}
 
 	const perRow = 3
@@ -40,7 +40,7 @@ func buildRootView(items []storage.Item) textView {
 	}
 
 	rows = append(rows, tgbotapi.NewInlineKeyboardRow(
-		tgbotapi.NewInlineKeyboardButtonData("➕ Dodaj novo", "add:0"),
+		tgbotapi.NewInlineKeyboardButtonData("➕ Add new", "add:0"),
 	))
 
 	return textView{text: text, keyboard: tgbotapi.NewInlineKeyboardMarkup(rows...)}
@@ -49,7 +49,7 @@ func buildRootView(items []storage.Item) textView {
 func buildFolderView(folder storage.Item, items []storage.Item) textView {
 	text := "📁 " + folder.Name
 	if len(items) == 0 {
-		text += "\n\nPrazno je. Dodaj prvi folder ili box."
+		text += "\n\nIt's empty. Add your first folder or box."
 	}
 
 	const perRow = 3
@@ -70,10 +70,10 @@ func buildFolderView(folder storage.Item, items []storage.Item) textView {
 	}
 
 	rows = append(rows,
-		tgbotapi.NewInlineKeyboardRow(tgbotapi.NewInlineKeyboardButtonData("➕ Dodaj novo", fmt.Sprintf("add:%d", folder.ID))),
+		tgbotapi.NewInlineKeyboardRow(tgbotapi.NewInlineKeyboardButtonData("➕ Add new", fmt.Sprintf("add:%d", folder.ID))),
 		tgbotapi.NewInlineKeyboardRow(
-			tgbotapi.NewInlineKeyboardButtonData("🗑 Obriši folder", fmt.Sprintf("delete_confirm:%d", folder.ID)),
-			tgbotapi.NewInlineKeyboardButtonData("⬅️ Nazad", "back:"+encodeParent(folder.ParentID)),
+			tgbotapi.NewInlineKeyboardButtonData("🗑 Delete folder", fmt.Sprintf("delete_confirm:%d", folder.ID)),
+			tgbotapi.NewInlineKeyboardButtonData("⬅️ Back", "back:"+encodeParent(folder.ParentID)),
 		),
 	)
 
@@ -94,10 +94,10 @@ func itemButton(it storage.Item) tgbotapi.InlineKeyboardButton {
 
 func measureKeyboard(box storage.Item) tgbotapi.InlineKeyboardMarkup {
 	return tgbotapi.NewInlineKeyboardMarkup(
-		tgbotapi.NewInlineKeyboardRow(tgbotapi.NewInlineKeyboardButtonData("➕ Unesi vrednost", fmt.Sprintf("add_entry:%d", box.ID))),
+		tgbotapi.NewInlineKeyboardRow(tgbotapi.NewInlineKeyboardButtonData("➕ Enter value", fmt.Sprintf("add_entry:%d", box.ID))),
 		tgbotapi.NewInlineKeyboardRow(
-			tgbotapi.NewInlineKeyboardButtonData("🗑 Obriši box", fmt.Sprintf("delete_confirm:%d", box.ID)),
-			tgbotapi.NewInlineKeyboardButtonData("⬅️ Nazad", "back:"+encodeParent(box.ParentID)),
+			tgbotapi.NewInlineKeyboardButtonData("🗑 Delete box", fmt.Sprintf("delete_confirm:%d", box.ID)),
+			tgbotapi.NewInlineKeyboardButtonData("⬅️ Back", "back:"+encodeParent(box.ParentID)),
 		),
 	)
 }
@@ -106,14 +106,14 @@ func measureSummaryKeyboard(box storage.Item, hasEntries bool) tgbotapi.InlineKe
 	var rows [][]tgbotapi.InlineKeyboardButton
 	if hasEntries {
 		rows = append(rows, tgbotapi.NewInlineKeyboardRow(
-			tgbotapi.NewInlineKeyboardButtonData("📊 Prikaži grafikon", fmt.Sprintf("show_chart:%d", box.ID)),
+			tgbotapi.NewInlineKeyboardButtonData("📊 Show chart", fmt.Sprintf("show_chart:%d", box.ID)),
 		))
 	}
 	rows = append(rows,
-		tgbotapi.NewInlineKeyboardRow(tgbotapi.NewInlineKeyboardButtonData("➕ Unesi vrednost", fmt.Sprintf("add_entry:%d", box.ID))),
+		tgbotapi.NewInlineKeyboardRow(tgbotapi.NewInlineKeyboardButtonData("➕ Enter value", fmt.Sprintf("add_entry:%d", box.ID))),
 		tgbotapi.NewInlineKeyboardRow(
-			tgbotapi.NewInlineKeyboardButtonData("🗑 Obriši box", fmt.Sprintf("delete_confirm:%d", box.ID)),
-			tgbotapi.NewInlineKeyboardButtonData("⬅️ Nazad", "back:"+encodeParent(box.ParentID)),
+			tgbotapi.NewInlineKeyboardButtonData("🗑 Delete box", fmt.Sprintf("delete_confirm:%d", box.ID)),
+			tgbotapi.NewInlineKeyboardButtonData("⬅️ Back", "back:"+encodeParent(box.ParentID)),
 		),
 	)
 	return tgbotapi.NewInlineKeyboardMarkup(rows...)
@@ -122,20 +122,20 @@ func measureSummaryKeyboard(box storage.Item, hasEntries bool) tgbotapi.InlineKe
 func buildMeasureSummaryView(box storage.Item, entries []storage.Entry) textView {
 	text := "📊 " + box.Name
 	if len(entries) == 0 {
-		text += "\n\nNema još nijednog zapisa."
+		text += "\n\nNo entries yet."
 	} else {
 		last := entries[len(entries)-1]
-		text += fmt.Sprintf("\n\nPoslednji unos: %.1f (%s)\nBroj zapisa: %d", *last.Value, formatDisplayDate(last.EntryDate), len(entries))
+		text += fmt.Sprintf("\n\nLatest entry: %.1f (%s)\nEntries: %d", *last.Value, formatDisplayDate(last.EntryDate), len(entries))
 	}
 	return textView{text: text, keyboard: measureSummaryKeyboard(box, len(entries) > 0)}
 }
 
 func checkKeyboard(box storage.Item) tgbotapi.InlineKeyboardMarkup {
 	return tgbotapi.NewInlineKeyboardMarkup(
-		tgbotapi.NewInlineKeyboardRow(tgbotapi.NewInlineKeyboardButtonData("✅ Označi odrađeno danas", fmt.Sprintf("add_entry:%d", box.ID))),
+		tgbotapi.NewInlineKeyboardRow(tgbotapi.NewInlineKeyboardButtonData("✅ Mark done today", fmt.Sprintf("add_entry:%d", box.ID))),
 		tgbotapi.NewInlineKeyboardRow(
-			tgbotapi.NewInlineKeyboardButtonData("🗑 Obriši box", fmt.Sprintf("delete_confirm:%d", box.ID)),
-			tgbotapi.NewInlineKeyboardButtonData("⬅️ Nazad", "back:"+encodeParent(box.ParentID)),
+			tgbotapi.NewInlineKeyboardButtonData("🗑 Delete box", fmt.Sprintf("delete_confirm:%d", box.ID)),
+			tgbotapi.NewInlineKeyboardButtonData("⬅️ Back", "back:"+encodeParent(box.ParentID)),
 		),
 	)
 }

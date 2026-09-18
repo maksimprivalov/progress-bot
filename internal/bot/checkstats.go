@@ -10,7 +10,7 @@ import (
 
 func formatCheckStats(entries []storage.Entry) string {
 	if len(entries) == 0 {
-		return "Nema još nijednog zapisa."
+		return "No entries yet."
 	}
 
 	done := make(map[string]bool, len(entries))
@@ -23,9 +23,9 @@ func formatCheckStats(entries []storage.Entry) string {
 	grid := buildCheckGrid(done, now, 30)
 
 	var sb strings.Builder
-	fmt.Fprintf(&sb, "🔥 Trenutni niz: %d dana\n", streak)
-	fmt.Fprintf(&sb, "✅ Ukupno odrađeno: %d dana\n\n", len(entries))
-	sb.WriteString("Poslednjih 30 dana (najstariji → najnoviji):\n")
+	fmt.Fprintf(&sb, "🔥 Current streak: %d days\n", streak)
+	fmt.Fprintf(&sb, "✅ Total done: %d days\n\n", len(entries))
+	sb.WriteString("Last 30 days (oldest → newest):\n")
 	sb.WriteString(grid)
 
 	return sb.String()

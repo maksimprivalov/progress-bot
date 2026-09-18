@@ -40,7 +40,7 @@ func (b *Bot) finishAddFolder(msg *tgbotapi.Message, userID int64, action pendin
 
 	if _, err := b.storage.CreateFolder(userID, action.parentID, name); err != nil {
 		log.Printf("greška pri kreiranju foldera (user_id=%d): %v", userID, err)
-		b.editText(msg.Chat.ID, action.promptMessageID, textView{text: "Došlo je do greške pri kreiranju foldera."})
+		b.editText(msg.Chat.ID, action.promptMessageID, textView{text: "Something went wrong while creating the folder."})
 		return
 	}
 
@@ -53,7 +53,7 @@ func (b *Bot) finishAddBox(msg *tgbotapi.Message, userID int64, action pendingAc
 
 	if _, err := b.storage.CreateBox(userID, action.parentID, action.boxType, name); err != nil {
 		log.Printf("greška pri kreiranju box-a (user_id=%d): %v", userID, err)
-		b.editText(msg.Chat.ID, action.promptMessageID, textView{text: "Došlo je do greške pri kreiranju box-a."})
+		b.editText(msg.Chat.ID, action.promptMessageID, textView{text: "Something went wrong while creating the box."})
 		return
 	}
 
@@ -83,11 +83,11 @@ func (b *Bot) replaceWithItemListView(chatID int64, messageID int, userID int64,
 func (b *Bot) finishAddEntry(msg *tgbotapi.Message, userID int64, action pendingAction, text string) {
 	value, err := strconv.ParseFloat(text, 64)
 	if err != nil {
-		b.reply(msg.Chat.ID, fmt.Sprintf("'%s' nije validan broj. Pošalji broj, npr. 82.5", text))
+		b.reply(msg.Chat.ID, fmt.Sprintf("'%s' is not a valid number. Send a number, e.g. 82.5", text))
 		return
 	}
 	if value < 0 || value > 1_000_000 {
-		b.reply(msg.Chat.ID, "Vrednost mora biti realan broj između 0 i 1 000 000.")
+		b.reply(msg.Chat.ID, "The value must be a real number between 0 and 1,000,000.")
 		return
 	}
 
@@ -97,7 +97,7 @@ func (b *Bot) finishAddEntry(msg *tgbotapi.Message, userID int64, action pending
 	today := time.Now().UTC().Format(storage.DateFormat)
 	if err := b.storage.UpsertMeasureEntry(action.boxID, today, value); err != nil {
 		log.Printf("greška pri upisu zapisa (box_id=%d): %v", action.boxID, err)
-		b.editText(msg.Chat.ID, action.promptMessageID, textView{text: "Došlo je do greške pri čuvanju zapisa."})
+		b.editText(msg.Chat.ID, action.promptMessageID, textView{text: "Something went wrong while saving the entry."})
 		return
 	}
 

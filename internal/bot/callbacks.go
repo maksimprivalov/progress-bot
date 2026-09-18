@@ -48,7 +48,7 @@ func (b *Bot) handleCallback(cb *tgbotapi.CallbackQuery) {
 	// na dugmetu). To je odvojeno od slanja/editovanja same poruke - zato
 	// ga radimo tačno jednom, na kraju, pošto svi handleri završe.
 	// startAddEntry je jedini koji ima nešto specifično da poruči (npr.
-	// "Već je označeno za danas.") - drugi handleri ostavljaju toast prazan.
+	// "Already marked for today.") - drugi handleri ostavljaju toast prazan.
 	var toast string
 	switch parts[0] {
 	case verbRoot:
@@ -143,7 +143,7 @@ func (b *Bot) showRoot(cb *tgbotapi.CallbackQuery, userID int64) {
 	items, err := b.storage.GetChildren(userID, nil)
 	if err != nil {
 		log.Printf("greška pri čitanju root menija (user_id=%d): %v", userID, err)
-		b.renderText(cb, textView{text: "Došlo je do greške pri čitanju podataka."})
+		b.renderText(cb, textView{text: "Something went wrong while reading your data."})
 		return
 	}
 	b.renderText(cb, buildRootView(items))
@@ -154,13 +154,13 @@ func (b *Bot) showFolder(cb *tgbotapi.CallbackQuery, userID, folderID int64) {
 	folder, err := b.storage.GetItem(folderID)
 	if err != nil || folder.UserID != userID || folder.Type != storage.ItemFolder {
 		log.Printf("greška pri otvaranju foldera %d (user_id=%d): %v", folderID, userID, err)
-		b.renderText(cb, textView{text: "Folder nije pronađen."})
+		b.renderText(cb, textView{text: "Folder not found."})
 		return
 	}
 	items, err := b.storage.GetChildren(userID, &folderID)
 	if err != nil {
 		log.Printf("greška pri čitanju sadržaja foldera %d: %v", folderID, err)
-		b.renderText(cb, textView{text: "Došlo je do greške pri čitanju podataka."})
+		b.renderText(cb, textView{text: "Something went wrong while reading your data."})
 		return
 	}
 	b.renderText(cb, buildFolderView(folder, items))
@@ -171,13 +171,13 @@ func (b *Bot) showBox(cb *tgbotapi.CallbackQuery, userID, boxID int64) {
 	box, err := b.storage.GetItem(boxID)
 	if err != nil || box.UserID != userID || box.Type != storage.ItemBox || box.BoxType == nil {
 		log.Printf("greška pri otvaranju box-a %d (user_id=%d): %v", boxID, userID, err)
-		b.renderText(cb, textView{text: "Box nije pronađen."})
+		b.renderText(cb, textView{text: "Box not found."})
 		return
 	}
 	entries, err := b.storage.GetEntries(boxID)
 	if err != nil {
 		log.Printf("greška pri čitanju zapisa box-a %d: %v", boxID, err)
-		b.renderText(cb, textView{text: "Došlo je do greške pri čitanju podataka."})
+		b.renderText(cb, textView{text: "Something went wrong while reading your data."})
 		return
 	}
 
@@ -202,7 +202,7 @@ func (b *Bot) showChart(cb *tgbotapi.CallbackQuery, userID, boxID int64) {
 	entries, err := b.storage.GetEntries(boxID)
 	if err != nil {
 		log.Printf("greška pri čitanju zapisa box-a %d: %v", boxID, err)
-		b.renderText(cb, textView{text: "Došlo je do greške pri čitanju podataka."})
+		b.renderText(cb, textView{text: "Something went wrong while reading your data."})
 		return
 	}
 	b.showMeasureChart(cb, box, entries)
@@ -235,12 +235,12 @@ func (b *Bot) showMeasureChart(cb *tgbotapi.CallbackQuery, box storage.Item, ent
 	png, err := chart.GenerateProgressPNG(box.Name, points)
 	if err != nil {
 		log.Printf("greška pri generisanju grafikona za box %d: %v", box.ID, err)
-		b.renderText(cb, textView{text: "Došlo je do greške pri generisanju grafikona.", keyboard: keyboard})
+		b.renderText(cb, textView{text: "Something went wrong while generating the chart.", keyboard: keyboard})
 		return
 	}
 
 	last := entries[len(entries)-1]
-	caption := fmt.Sprintf("📊 %s\n\nPoslednji unos: %.1f (%s)", box.Name, *last.Value, formatDisplayDate(last.EntryDate))
+	caption := fmt.Sprintf("📊 %s\n\nLatest entry: %.1f (%s)", box.Name, *last.Value, formatDisplayDate(last.EntryDate))
 	b.renderPhoto(cb, caption, png, keyboard)
 }
 
@@ -267,9 +267,9 @@ func (b *Bot) startAdd(cb *tgbotapi.CallbackQuery, userID int64, parts []string)
 			tgbotapi.NewInlineKeyboardButtonData("📁 Folder", "add_folder:"+parentArg),
 			tgbotapi.NewInlineKeyboardButtonData("📦 Box", "add_box:"+parentArg),
 		),
-		tgbotapi.NewInlineKeyboardRow(tgbotapi.NewInlineKeyboardButtonData("⬅️ Nazad", "back:"+parentArg)),
+		tgbotapi.NewInlineKeyboardRow(tgbotapi.NewInlineKeyboardButtonData("⬅️ Back", "back:"+parentArg)),
 	)
-	b.renderText(cb, textView{text: "Šta želiš da dodaš?", keyboard: keyboard})
+	b.renderText(cb, textView{text: "What do you want to add?", keyboard: keyboard})
 }
 
 func (b *Bot) startAddFolderName(cb *tgbotapi.CallbackQuery, userID int64, parts []string) {
@@ -279,9 +279,9 @@ func (b *Bot) startAddFolderName(cb *tgbotapi.CallbackQuery, userID int64, parts
 	}
 
 	keyboard := tgbotapi.NewInlineKeyboardMarkup(
-		tgbotapi.NewInlineKeyboardRow(tgbotapi.NewInlineKeyboardButtonData("⬅️ Otkaži", "back:"+encodeParent(parentID))),
+		tgbotapi.NewInlineKeyboardRow(tgbotapi.NewInlineKeyboardButtonData("⬅️ Cancel", "back:"+encodeParent(parentID))),
 	)
-	messageID := b.renderText(cb, textView{text: "Kako se zove novi folder? Pošalji mi ime kao poruku.", keyboard: keyboard})
+	messageID := b.renderText(cb, textView{text: "What should the new folder be called? Send me the name as a message.", keyboard: keyboard})
 	b.state.set(userID, pendingAction{kind: pendingFolderName, parentID: parentID, promptMessageID: messageID})
 }
 
@@ -300,12 +300,12 @@ func (b *Bot) showBoxTypeChoice(cb *tgbotapi.CallbackQuery, parentID *int64) {
 	parentArg := encodeParent(parentID)
 	keyboard := tgbotapi.NewInlineKeyboardMarkup(
 		tgbotapi.NewInlineKeyboardRow(
-			tgbotapi.NewInlineKeyboardButtonData("✅ Check (navika)", "add_box_type:check:"+parentArg),
-			tgbotapi.NewInlineKeyboardButtonData("📊 Measure (merenje)", "add_box_type:measure:"+parentArg),
+			tgbotapi.NewInlineKeyboardButtonData("✅ Check (habit)", "add_box_type:check:"+parentArg),
+			tgbotapi.NewInlineKeyboardButtonData("📊 Measure", "add_box_type:measure:"+parentArg),
 		),
-		tgbotapi.NewInlineKeyboardRow(tgbotapi.NewInlineKeyboardButtonData("⬅️ Nazad", "back:"+parentArg)),
+		tgbotapi.NewInlineKeyboardRow(tgbotapi.NewInlineKeyboardButtonData("⬅️ Back", "back:"+parentArg)),
 	)
-	b.renderText(cb, textView{text: "Kakav box želiš da napraviš?", keyboard: keyboard})
+	b.renderText(cb, textView{text: "What kind of box do you want to create?", keyboard: keyboard})
 }
 
 func (b *Bot) startAddBoxName(cb *tgbotapi.CallbackQuery, userID int64, parts []string) {
@@ -321,15 +321,15 @@ func (b *Bot) startAddBoxName(cb *tgbotapi.CallbackQuery, userID int64, parts []
 		return
 	}
 
-	label := "Measure (merenje)"
+	label := "Measure"
 	if boxType == storage.BoxCheck {
-		label = "Check (navika)"
+		label = "Check (habit)"
 	}
 	keyboard := tgbotapi.NewInlineKeyboardMarkup(
-		tgbotapi.NewInlineKeyboardRow(tgbotapi.NewInlineKeyboardButtonData("⬅️ Otkaži", "back:"+encodeParent(parentID))),
+		tgbotapi.NewInlineKeyboardRow(tgbotapi.NewInlineKeyboardButtonData("⬅️ Cancel", "back:"+encodeParent(parentID))),
 	)
 	messageID := b.renderText(cb, textView{
-		text:     fmt.Sprintf("Kako se zove novi %s box? Pošalji mi ime kao poruku.", label),
+		text:     fmt.Sprintf("What should the new %s box be called? Send me the name as a message.", label),
 		keyboard: keyboard,
 	})
 	b.state.set(userID, pendingAction{kind: pendingBoxName, parentID: parentID, boxType: boxType, promptMessageID: messageID})
@@ -343,16 +343,16 @@ func (b *Bot) startAddEntry(cb *tgbotapi.CallbackQuery, userID int64, parts []st
 	box, err := b.storage.GetItem(boxID)
 	if err != nil || box.UserID != userID || box.Type != storage.ItemBox || box.BoxType == nil {
 		log.Printf("greška pri dodavanju zapisa za box %d (user_id=%d): %v", boxID, userID, err)
-		return "Box nije pronađen."
+		return "Box not found."
 	}
 
 	switch *box.BoxType {
 	case storage.BoxMeasure:
 		keyboard := tgbotapi.NewInlineKeyboardMarkup(
-			tgbotapi.NewInlineKeyboardRow(tgbotapi.NewInlineKeyboardButtonData("⬅️ Otkaži", fmt.Sprintf("open_box:%d", box.ID))),
+			tgbotapi.NewInlineKeyboardRow(tgbotapi.NewInlineKeyboardButtonData("⬅️ Cancel", fmt.Sprintf("open_box:%d", box.ID))),
 		)
 		messageID := b.renderText(cb, textView{
-			text:     fmt.Sprintf("📊 %s\n\nPošalji mi novu vrednost (broj), npr. 82.5", box.Name),
+			text:     fmt.Sprintf("📊 %s\n\nSend me the new value (a number), e.g. 82.5", box.Name),
 			keyboard: keyboard,
 		})
 		b.state.set(userID, pendingAction{kind: pendingEntryValue, boxID: boxID, promptMessageID: messageID})
@@ -369,20 +369,20 @@ func (b *Bot) markCheckDoneAndRefresh(cb *tgbotapi.CallbackQuery, box storage.It
 	alreadyMarked, err := b.storage.MarkCheckDone(box.ID, today)
 	if err != nil {
 		log.Printf("greška pri obeležavanju box-a %d: %v", box.ID, err)
-		return "Došlo je do greške. Pokušaj ponovo."
+		return "Something went wrong. Please try again."
 	}
 
 	entries, err := b.storage.GetEntries(box.ID)
 	if err != nil {
 		log.Printf("greška pri čitanju zapisa box-a %d: %v", box.ID, err)
-		return "Došlo je do greške. Pokušaj ponovo."
+		return "Something went wrong. Please try again."
 	}
 	b.showCheckBox(cb, box, entries)
 
 	if alreadyMarked {
-		return "Već je označeno za danas."
+		return "Already marked for today."
 	}
-	return "Označeno kao odrađeno!"
+	return "Marked as done!"
 }
 
 func (b *Bot) handleBack(cb *tgbotapi.CallbackQuery, userID int64, parts []string) {

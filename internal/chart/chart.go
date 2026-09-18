@@ -1,13 +1,3 @@
-// Paket chart zna samo jednu stvar: kako od niza tačaka (datum, vrednost)
-// napraviti PNG sliku u memoriji. Ne zna ništa o Telegramu ni o bazi -
-// prima obične Go tipove (Point) i vraća []byte. Ovakva izolacija olakšava
-// testiranje (može se testirati bez baze i bez Telegram API-ja) i ponovnu
-// upotrebu (npr. kasnije eksport u fajl ili drugi format komunikacije).
-//
-// Grafikon je namenjen "measure" box-ovima (numeričke vrednosti kroz
-// vreme - kilaža, sekunde, ponavljanja...). "check" box-ovi (navike) imaju
-// sopstveni, tekstualni prikaz - vidi internal/bot/checkstats.go - jer
-// binarni podatak (odrađeno/nije) nema smisla crtati kao liniju.
 package chart
 
 import (
@@ -39,8 +29,8 @@ func GenerateProgressPNG(title string, points []Point) ([]byte, error) {
 
 	p := plot.New()
 	p.Title.Text = title
-	p.X.Label.Text = "Datum"
-	p.Y.Label.Text = "Vrednost"
+	p.X.Label.Text = "Date"
+	p.Y.Label.Text = "Value"
 	p.X.Tick.Marker = dateTicker{points: sorted}
 
 	xys := make(plotter.XYs, len(sorted))

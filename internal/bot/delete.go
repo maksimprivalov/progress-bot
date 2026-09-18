@@ -29,8 +29,8 @@ func (b *Bot) showDeleteConfirm(cb *tgbotapi.CallbackQuery, userID, itemID int64
 
 	keyboard := tgbotapi.NewInlineKeyboardMarkup(
 		tgbotapi.NewInlineKeyboardRow(
-			tgbotapi.NewInlineKeyboardButtonData("🗑 Da, obriši", fmt.Sprintf("delete_do:%d", itemID)),
-			tgbotapi.NewInlineKeyboardButtonData("❌ Otkaži", cancelTarget),
+			tgbotapi.NewInlineKeyboardButtonData("🗑 Yes, delete", fmt.Sprintf("delete_do:%d", itemID)),
+			tgbotapi.NewInlineKeyboardButtonData("❌ Cancel", cancelTarget),
 		),
 	)
 	b.renderText(cb, textView{text: buildDeleteConfirmText(item, childItems, entryCount), keyboard: keyboard})
@@ -45,14 +45,14 @@ func buildDeleteConfirmText(item storage.Item, childItems, entryCount int) strin
 		}
 	}
 
-	text := fmt.Sprintf("⚠️ Obrisati %s %s?", icon, item.Name)
+	text := fmt.Sprintf("⚠️ Delete %s %s?", icon, item.Name)
 	switch {
 	case childItems > 0:
-		text += fmt.Sprintf("\n\nOvo će obrisati i %d stavki i %d zapisa unutra.", childItems, entryCount)
+		text += fmt.Sprintf("\n\nThis will also delete %d items and %d entries inside it.", childItems, entryCount)
 	case entryCount > 0:
-		text += fmt.Sprintf("\n\nOvo će obrisati i %d zapisa.", entryCount)
+		text += fmt.Sprintf("\n\nThis will also delete %d entries.", entryCount)
 	}
-	text += "\n\nOva akcija je nepovratna."
+	text += "\n\nThis action cannot be undone."
 	return text
 }
 
@@ -65,12 +65,12 @@ func (b *Bot) performDelete(cb *tgbotapi.CallbackQuery, userID int64, parts []st
 	item, err := b.storage.GetItem(itemID)
 	if err != nil || item.UserID != userID {
 		log.Printf("greška pri brisanju stavke %d (user_id=%d): %v", itemID, userID, err)
-		return "Stavka nije pronađena."
+		return "Item not found."
 	}
 
 	if err := b.storage.DeleteItem(itemID); err != nil {
 		log.Printf("greška pri brisanju stavke %d: %v", itemID, err)
-		return "Došlo je do greške pri brisanju."
+		return "Something went wrong while deleting."
 	}
 
 	b.state.clear(userID)
@@ -81,5 +81,5 @@ func (b *Bot) performDelete(cb *tgbotapi.CallbackQuery, userID int64, parts []st
 		b.showFolder(cb, userID, *item.ParentID)
 	}
 
-	return fmt.Sprintf("Obrisano: %s", item.Name)
+	return fmt.Sprintf("Deleted: %s", item.Name)
 }

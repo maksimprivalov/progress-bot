@@ -6,17 +6,17 @@ import (
 	tgbotapi "github.com/go-telegram-bot-api/telegram-bot-api/v5"
 )
 
-const helpText = `Bot za praćenje napretka.
+const helpText = `Progress tracking bot.
 
-Podaci su organizovani u stablo:
-📁 Folder - grupiše foldere i box-ove (npr. "Zdravlje" -> "Trening" -> ...). Folderi mogu biti proizvoljno ugnježdeni.
-📦 Box - list stabla, čuva zapise. Pri kreiranju biraš jedan od dva podtipa:
-   📊 Measure - numerička vrednost po danu (kilaža, sekunde, ponavljanja...) - prikazuje se grafikon
-   ✅ Check - navika koju samo obeležavaš kao odrađenu tog dana - prikazuje se niz (streak) i pregled poslednjih dana
+Your data is organized as a tree:
+📁 Folder - groups folders and boxes (e.g. "Health" -> "Workout" -> ...). Folders can be nested arbitrarily deep.
+📦 Box - a leaf of the tree, stores entries. When creating one, you pick one of two subtypes:
+   📊 Measure - a numeric value per day (weight, seconds, reps...) - shown as a chart
+   ✅ Check - a habit you just mark as done for the day - shown as a streak and a recent-days overview
 
-Komande:
-/menu - otvori glavni meni
-/help - prikaži ovu poruku`
+Commands:
+/menu - open the main menu
+/help - show this message`
 
 func (b *Bot) handleMessage(msg *tgbotapi.Message) {
 	if msg.IsCommand() {
@@ -33,7 +33,7 @@ func (b *Bot) handleCommand(msg *tgbotapi.Message) {
 	case "menu":
 		b.sendRootMenu(msg.Chat.ID, msg.From.ID)
 	default:
-		b.reply(msg.Chat.ID, "Nepoznata komanda. Kucaj /help za listu komandi.")
+		b.reply(msg.Chat.ID, "Unknown command. Type /help for the list of commands.")
 	}
 }
 
@@ -42,7 +42,7 @@ func (b *Bot) sendRootMenu(chatID, userID int64) {
 	items, err := b.storage.GetChildren(userID, nil)
 	if err != nil {
 		log.Printf("greška pri čitanju root menija (user_id=%d): %v", userID, err)
-		b.reply(chatID, "Došlo je do greške pri čitanju podataka.")
+		b.reply(chatID, "Something went wrong while reading your data.")
 		return
 	}
 	b.sendText(chatID, buildRootView(items))

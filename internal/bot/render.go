@@ -17,9 +17,9 @@ type textView struct {
 }
 
 func buildRootView(items []storage.Item) textView {
-	text := "📋 Main menu"
+	text := "📋 Main menu. Your Folders and Trackers start here."
 	if len(items) == 0 {
-		text += "\n\nIt's empty. Add your first folder or box."
+		text += "\n\nIt's empty. Go on and add your first Folder or Tracker."
 	}
 
 	const perRow = 3
@@ -46,10 +46,21 @@ func buildRootView(items []storage.Item) textView {
 	return textView{text: text, keyboard: tgbotapi.NewInlineKeyboardMarkup(rows...)}
 }
 
+func buildStartView(helpText string) textView {
+
+	var rows [][]tgbotapi.InlineKeyboardButton
+
+	rows = append(rows, tgbotapi.NewInlineKeyboardRow(
+		tgbotapi.NewInlineKeyboardButtonData("✔️ Got it!", "start"),
+	))
+
+	return textView{text: helpText, keyboard: tgbotapi.NewInlineKeyboardMarkup(rows...)}
+}
+
 func buildFolderView(folder storage.Item, items []storage.Item) textView {
 	text := "📁 " + folder.Name
 	if len(items) == 0 {
-		text += "\n\nIt's empty. Add your first folder or box."
+		text += "\n\nIt's empty. Add your first Folder or Tracker."
 	}
 
 	const perRow = 3
@@ -173,7 +184,9 @@ func withKeyboard(kb tgbotapi.InlineKeyboardMarkup) tgbotapi.InlineKeyboardMarku
 // getting id of the message to edit it later, instead of sending a new message (which would be confusing for the user) - see finishAddFolder/finishAddBox/finishAddEntry in text_input.go
 func (b *Bot) sendText(chatID int64, v textView) int {
 	msg := tgbotapi.NewMessage(chatID, v.text)
+	msg.ParseMode = tgbotapi.ModeHTML
 	msg.ReplyMarkup = withKeyboard(v.keyboard)
+
 	sent, err := b.api.Send(msg)
 	if err != nil {
 		log.Printf("greška pri slanju poruke (chat_id=%d): %v", chatID, err)

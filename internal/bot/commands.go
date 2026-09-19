@@ -6,17 +6,18 @@ import (
 	tgbotapi "github.com/go-telegram-bot-api/telegram-bot-api/v5"
 )
 
-const helpText = `Progress tracking bot.
+const helpText = `<b>Progress Tracking Bot</b>
 
-Your data is organized as a tree:
-📁 Folder - groups folders and boxes (e.g. "Health" -> "Workout" -> ...). Folders can be nested arbitrarily deep.
-📦 Box - a leaf of the tree, stores entries. When creating one, you pick one of two subtypes:
-   📊 Measure - a numeric value per day (weight, seconds, reps...) - shown as a chart
-   ✅ Check - a habit you just mark as done for the day - shown as a streak and a recent-days overview
+Organize and track your progress in a simple tree:
 
-Commands:
-/menu - open the main menu
-/help - show this message`
+📁 <b>Folder</b> - organizes Folders and Trackers. Folders can be nested freely.
+📝 <b>Tracker</b> - tracks one thing. Choose one type:
+- 📊 <b>Measure</b> - a daily number (weight, reps, time, etc.), shown as a chart.
+- ✅ <b>Check</b> - mark a habit as done each day, shown as a streak and recent activity.
+
+Example:
+📁 Health → 📁 Workout → 📁 Chest → 📁 Bench Press → 📊 8-12 reps → 70
+📁 Health → 📁 Morning Routine → ✅ Plan the day → ✅`
 
 func (b *Bot) handleMessage(msg *tgbotapi.Message) {
 	if msg.IsCommand() {
@@ -29,12 +30,13 @@ func (b *Bot) handleMessage(msg *tgbotapi.Message) {
 func (b *Bot) handleCommand(msg *tgbotapi.Message) {
 	switch msg.Command() {
 	case "start", "help":
-		b.reply(msg.Chat.ID, helpText)
+		b.sendRootStartMessage(msg.Chat.ID, msg.From.ID)
 	case "menu":
 		b.sendRootMenu(msg.Chat.ID, msg.From.ID)
 	default:
 		b.reply(msg.Chat.ID, "Unknown command. Type /help for the list of commands.")
 	}
+	b.deleteMessage(msg.Chat.ID, msg.MessageID)
 }
 
 func (b *Bot) sendRootMenu(chatID, userID int64) {
@@ -46,6 +48,12 @@ func (b *Bot) sendRootMenu(chatID, userID int64) {
 		return
 	}
 	b.sendText(chatID, buildRootView(items))
+}
+
+func (b *Bot) sendRootStartMessage(chatID, userID int64) {
+	b.state.clear(userID)
+
+	b.sendText(chatID, buildStartView(helpText))
 }
 
 func (b *Bot) reply(chatID int64, text string) {

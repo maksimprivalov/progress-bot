@@ -32,6 +32,7 @@ const (
 	verbDeleteConfirm = "delete_confirm"
 	verbDeleteDo      = "delete_do"
 	verbShowChart     = "show_chart"
+	verbStart         = "start"
 )
 
 // handleCallback rutira klik na inline dugme. Svi handleri ispod su
@@ -73,6 +74,8 @@ func (b *Bot) handleCallback(cb *tgbotapi.CallbackQuery) {
 		toast = b.startAddEntry(cb, userID, parts)
 	case verbBack:
 		b.handleBack(cb, userID, parts)
+	case verbStart:
+		b.handleStart(cb, userID)
 	case verbDeleteConfirm:
 		if id, ok := parseID(parts, 1); ok {
 			b.showDeleteConfirm(cb, userID, id)
@@ -171,7 +174,7 @@ func (b *Bot) showBox(cb *tgbotapi.CallbackQuery, userID, boxID int64) {
 	box, err := b.storage.GetItem(boxID)
 	if err != nil || box.UserID != userID || box.Type != storage.ItemBox || box.BoxType == nil {
 		log.Printf("greška pri otvaranju box-a %d (user_id=%d): %v", boxID, userID, err)
-		b.renderText(cb, textView{text: "Box not found."})
+		b.renderText(cb, textView{text: "Tracker not found."})
 		return
 	}
 	entries, err := b.storage.GetEntries(boxID)
@@ -234,7 +237,7 @@ func (b *Bot) showMeasureChart(cb *tgbotapi.CallbackQuery, box storage.Item, ent
 	points := pointsFromEntries(entries)
 	png, err := chart.GenerateProgressPNG(box.Name, points)
 	if err != nil {
-		log.Printf("greška pri generisanju grafikona za box %d: %v", box.ID, err)
+		log.Printf("greška pri generisanju grafikona za Tracker %d: %v", box.ID, err)
 		b.renderText(cb, textView{text: "Something went wrong while generating the chart.", keyboard: keyboard})
 		return
 	}
@@ -265,7 +268,7 @@ func (b *Bot) startAdd(cb *tgbotapi.CallbackQuery, userID int64, parts []string)
 	keyboard := tgbotapi.NewInlineKeyboardMarkup(
 		tgbotapi.NewInlineKeyboardRow(
 			tgbotapi.NewInlineKeyboardButtonData("📁 Folder", "add_folder:"+parentArg),
-			tgbotapi.NewInlineKeyboardButtonData("📦 Box", "add_box:"+parentArg),
+			tgbotapi.NewInlineKeyboardButtonData("📝 Tracker", "add_box:"+parentArg),
 		),
 		tgbotapi.NewInlineKeyboardRow(tgbotapi.NewInlineKeyboardButtonData("⬅️ Back", "back:"+parentArg)),
 	)
@@ -329,7 +332,7 @@ func (b *Bot) startAddBoxName(cb *tgbotapi.CallbackQuery, userID int64, parts []
 		tgbotapi.NewInlineKeyboardRow(tgbotapi.NewInlineKeyboardButtonData("⬅️ Cancel", "back:"+encodeParent(parentID))),
 	)
 	messageID := b.renderText(cb, textView{
-		text:     fmt.Sprintf("What should the new %s box be called? Send me the name as a message.", label),
+		text:     fmt.Sprintf("What should the new %s Tracker be called? Send me the name as a message.", label),
 		keyboard: keyboard,
 	})
 	b.state.set(userID, pendingAction{kind: pendingBoxName, parentID: parentID, boxType: boxType, promptMessageID: messageID})
@@ -342,8 +345,8 @@ func (b *Bot) startAddEntry(cb *tgbotapi.CallbackQuery, userID int64, parts []st
 	}
 	box, err := b.storage.GetItem(boxID)
 	if err != nil || box.UserID != userID || box.Type != storage.ItemBox || box.BoxType == nil {
-		log.Printf("greška pri dodavanju zapisa za box %d (user_id=%d): %v", boxID, userID, err)
-		return "Box not found."
+		log.Printf("greška pri dodavanju zapisa za Tracker  %d (user_id=%d): %v", boxID, userID, err)
+		return "Tracker not found."
 	}
 
 	switch *box.BoxType {
@@ -368,13 +371,13 @@ func (b *Bot) markCheckDoneAndRefresh(cb *tgbotapi.CallbackQuery, box storage.It
 	today := time.Now().UTC().Format(storage.DateFormat)
 	alreadyMarked, err := b.storage.MarkCheckDone(box.ID, today)
 	if err != nil {
-		log.Printf("greška pri obeležavanju box-a %d: %v", box.ID, err)
+		log.Printf("greška pri obeležavanju Tracker-a %d: %v", box.ID, err)
 		return "Something went wrong. Please try again."
 	}
 
 	entries, err := b.storage.GetEntries(box.ID)
 	if err != nil {
-		log.Printf("greška pri čitanju zapisa box-a %d: %v", box.ID, err)
+		log.Printf("greška pri čitanju zapisa Tracker-a %d: %v", box.ID, err)
 		return "Something went wrong. Please try again."
 	}
 	b.showCheckBox(cb, box, entries)
@@ -383,6 +386,11 @@ func (b *Bot) markCheckDoneAndRefresh(cb *tgbotapi.CallbackQuery, box storage.It
 		return "Already marked for today."
 	}
 	return "Marked as done!"
+}
+
+func (b *Bot) handleStart(cb *tgbotapi.CallbackQuery, userID int64) {
+	b.state.clear(userID)
+	b.showRoot(cb, userID)
 }
 
 func (b *Bot) handleBack(cb *tgbotapi.CallbackQuery, userID int64, parts []string) {

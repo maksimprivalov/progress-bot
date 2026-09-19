@@ -17,7 +17,7 @@ type textView struct {
 }
 
 func buildRootView(items []storage.Item) textView {
-	text := "Main menu. Your Folders and Trackers start here. 🎯"
+	text := "<b>Main menu</b> \nYour Folders and Trackers start here 🎯"
 	if len(items) == 0 {
 		text += "\n\nIt's empty. Go on and add your first Folder or Tracker."
 	}
@@ -200,6 +200,14 @@ func (b *Bot) editText(chatID int64, messageID int, v textView) {
 	edit.ParseMode = tgbotapi.ModeHTML
 	if _, err := b.api.Send(edit); err != nil {
 		log.Printf("greška pri editovanju poruke (chat_id=%d, message_id=%d): %v", chatID, messageID, err)
+	}
+}
+
+// removeKeyboard strips the inline buttons from a message and leaves its text untouched.
+func (b *Bot) removeKeyboard(chatID int64, messageID int) {
+	edit := tgbotapi.NewEditMessageReplyMarkup(chatID, messageID, withKeyboard(tgbotapi.InlineKeyboardMarkup{}))
+	if _, err := b.api.Send(edit); err != nil {
+		log.Printf("greška pri uklanjanju tastature (chat_id=%d, message_id=%d): %v", chatID, messageID, err)
 	}
 }
 

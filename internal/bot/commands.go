@@ -6,18 +6,35 @@ import (
 	tgbotapi "github.com/go-telegram-bot-api/telegram-bot-api/v5"
 )
 
-const helpText = `<b>Progress Tracking Bot</b>
+const helpText = `<b>📈 Progress Tracking Bot</b>
 
-Organize and track your progress in a simple tree:
+Organize your progress in a simple tree:
 
-📁 <b>Folder</b> - organizes Folders and Trackers. Folders can be nested freely.
-📝 <b>Tracker</b> - tracks one thing. Choose one type:
-- 📊 <b>Measure</b> - a daily number (weight, reps, time, etc.), shown as a chart.
-- ✅ <b>Check</b> - mark a habit as done each day, shown as a streak and recent activity.
+📁 <b>Folder</b>
+Organizes folders and trackers. Folders can be nested freely.
 
-Example:
-📁 Health → 📁 Workout → 📁 Chest → 📁 Bench Press → 📊 8-12 reps → 70
-📁 Health → 📁 Morning Routine → ✅ Plan the day → ✅`
+📝 <b>Tracker</b>
+Tracks one thing using one of two types:
+
+📊 <b>Measure</b>
+A daily number such as weight, reps, or time.
+<i>Displayed as a chart.</i>
+
+✅ <b>Check</b>
+Mark a habit as completed each day.
+<i>Displayed as a streak and recent activity.</i>
+
+<b>Example</b>
+
+📁 <b>Health</b>
+　└─ 📁 <b>Workout</b>
+　　　└─ 📁 <b>Chest</b>
+　　　　　└─ 📊 <b>Bench Press</b>
+　　　　　　　70 kg
+
+📁 <b>Health</b>
+　└─ 📁 <b>Morning Routine</b>
+　　　└─ ✅ <b>Plan the day</b>`
 
 func (b *Bot) handleMessage(msg *tgbotapi.Message) {
 	if msg.IsCommand() {

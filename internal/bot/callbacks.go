@@ -389,9 +389,11 @@ func (b *Bot) markCheckDoneAndRefresh(cb *tgbotapi.CallbackQuery, box storage.It
 	return "Marked as done!"
 }
 
+// handleStart ("Got it!" on the /start message) keeps the intro text in the chat,
+// only removes its button, and sends the root menu as a NEW message.
 func (b *Bot) handleStart(cb *tgbotapi.CallbackQuery, userID int64) {
-	b.state.clear(userID)
-	b.showRoot(cb, userID)
+	b.removeKeyboard(cb.Message.Chat.ID, cb.Message.MessageID)
+	b.sendRootMenu(cb.Message.Chat.ID, userID)
 }
 
 func (b *Bot) handleBack(cb *tgbotapi.CallbackQuery, userID int64, parts []string) {

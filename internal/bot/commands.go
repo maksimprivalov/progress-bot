@@ -30,7 +30,7 @@ Mark a habit as completed each day.
 　└─ 📁 <b>Workout</b>
 　　　└─ 📁 <b>Chest</b>
 　　　　　└─ 📊 <b>Bench Press</b>
-　　　　　　　70 kg
+　　　　　　　70 (kg)
 
 📁 <b>Health</b>
 　└─ 📁 <b>Morning Routine</b>

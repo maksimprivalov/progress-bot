@@ -251,7 +251,7 @@ func (b *Bot) showMeasureChart(cb *tgbotapi.CallbackQuery, box storage.Item, ent
 // poslednjih dana) umesto grafikona - vidi obrazloženje u checkstats.go.
 func (b *Bot) showCheckBox(cb *tgbotapi.CallbackQuery, box storage.Item, entries []storage.Entry) {
 	keyboard := checkKeyboard(box)
-	text := fmt.Sprintf("✅ %s\n\n%s", box.Name, formatCheckStats(entries))
+	text := fmt.Sprintf("✅ <b>%s</b>\n\n%s", box.Name, formatCheckStats(entries))
 	b.renderText(cb, textView{text: text, keyboard: keyboard})
 }
 
@@ -355,9 +355,10 @@ func (b *Bot) startAddEntry(cb *tgbotapi.CallbackQuery, userID int64, parts []st
 			tgbotapi.NewInlineKeyboardRow(tgbotapi.NewInlineKeyboardButtonData("⬅️ Cancel", fmt.Sprintf("open_box:%d", box.ID))),
 		)
 		messageID := b.renderText(cb, textView{
-			text:     fmt.Sprintf("📊 %s\n\nSend me the new value (a number), e.g. 82.5", box.Name),
+			text:     fmt.Sprintf("📊 %s\n\nSend me the new value, optionally with a date.\n\nExamples:\n• 82.5\n• 82.5 19/09/2026", box.Name),
 			keyboard: keyboard,
 		})
+
 		b.state.set(userID, pendingAction{kind: pendingEntryValue, boxID: boxID, promptMessageID: messageID})
 		return ""
 	case storage.BoxCheck:

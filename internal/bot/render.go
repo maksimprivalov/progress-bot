@@ -58,7 +58,7 @@ func buildStartView(helpText string) textView {
 }
 
 func buildFolderView(folder storage.Item, items []storage.Item) textView {
-	text := "📁 " + folder.Name
+	text := "📁 <b>" + folder.Name + "</b>"
 	if len(items) == 0 {
 		text += "\n\nIt's empty. Add your first Folder or Tracker."
 	}
@@ -131,7 +131,7 @@ func measureSummaryKeyboard(box storage.Item, hasEntries bool) tgbotapi.InlineKe
 }
 
 func buildMeasureSummaryView(box storage.Item, entries []storage.Entry) textView {
-	text := "📊 " + box.Name
+	text := "📊 <b>" + box.Name + "</b>"
 	if len(entries) == 0 {
 		text += "\n\nNo entries yet."
 	} else {
@@ -197,6 +197,7 @@ func (b *Bot) sendText(chatID int64, v textView) int {
 
 func (b *Bot) editText(chatID int64, messageID int, v textView) {
 	edit := tgbotapi.NewEditMessageTextAndMarkup(chatID, messageID, v.text, withKeyboard(v.keyboard))
+	edit.ParseMode = tgbotapi.ModeHTML
 	if _, err := b.api.Send(edit); err != nil {
 		log.Printf("greška pri editovanju poruke (chat_id=%d, message_id=%d): %v", chatID, messageID, err)
 	}

@@ -81,21 +81,40 @@ func (b *Bot) replaceWithItemListView(chatID int64, messageID int, userID int64,
 }
 
 func (b *Bot) finishAddEntry(msg *tgbotapi.Message, userID int64, action pendingAction, text string) {
-	value, err := strconv.ParseFloat(text, 64)
-	if err != nil {
-		b.reply(msg.Chat.ID, fmt.Sprintf("'%s' is not a valid number. Send a number, e.g. 82.5", text))
+	parts := strings.Fields(text)
+
+	if len(parts) == 0 || len(parts) > 2 {
+		b.reply(msg.Chat.ID, "Invalid format. Send a number or a number with a date, e.g. 82.5 or 82.5 19/09/2026")
 		return
 	}
+
+	value, err := strconv.ParseFloat(parts[0], 64)
+	if err != nil {
+		b.reply(msg.Chat.ID, fmt.Sprintf("'%s' is not a valid number. Send a number, e.g. 82.5", parts[0]))
+		return
+	}
+
 	if value < 0 || value > 1_000_000 {
 		b.reply(msg.Chat.ID, "The value must be a real number between 0 and 1,000,000.")
 		return
 	}
 
+	date := time.Now().UTC().Format(storage.DateFormat)
+
+	if len(parts) == 2 {
+		parsedDate, err := time.Parse("02/01/2006", parts[1])
+		if err != nil {
+			b.reply(msg.Chat.ID, "Invalid date. Use the format dd/mm/yyyy, e.g. 19/09/2026")
+			return
+		}
+
+		date = parsedDate.Format(storage.DateFormat)
+	}
+
 	b.state.clear(userID)
 	b.deleteMessage(msg.Chat.ID, msg.MessageID)
 
-	today := time.Now().UTC().Format(storage.DateFormat)
-	if err := b.storage.UpsertMeasureEntry(action.boxID, today, value); err != nil {
+	if err := b.storage.UpsertMeasureEntry(action.boxID, date, value); err != nil {
 		log.Printf("greška pri upisu zapisa (box_id=%d): %v", action.boxID, err)
 		b.editText(msg.Chat.ID, action.promptMessageID, textView{text: "Something went wrong while saving the entry."})
 		return
@@ -106,6 +125,7 @@ func (b *Bot) finishAddEntry(msg *tgbotapi.Message, userID int64, action pending
 		log.Printf("greška pri čitanju box-a %d: %v", action.boxID, err)
 		return
 	}
+
 	entries, err := b.storage.GetEntries(action.boxID)
 	if err != nil {
 		log.Printf("greška pri čitanju zapisa box-a %d: %v", action.boxID, err)

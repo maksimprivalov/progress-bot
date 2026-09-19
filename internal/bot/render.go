@@ -17,7 +17,7 @@ type textView struct {
 }
 
 func buildRootView(items []storage.Item) textView {
-	text := "📋 Main menu. Your Folders and Trackers start here."
+	text := "Main menu. Your Folders and Trackers start here. 🎯"
 	if len(items) == 0 {
 		text += "\n\nIt's empty. Go on and add your first Folder or Tracker."
 	}
